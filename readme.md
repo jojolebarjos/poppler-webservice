@@ -5,4 +5,5 @@
 
 ```
 docker build -t poppler .
+docker run -d -p 8080:8080 poppler
 ```

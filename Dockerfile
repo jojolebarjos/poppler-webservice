@@ -1,5 +1,6 @@
 
-FROM alpine:3.8
+#FROM alpine:3.8
+FROM golang:alpine
 
 MAINTAINER Jojo le Barjos (jojolebarjos@gmail.com)
 
@@ -13,7 +14,7 @@ RUN apk --no-cache add \
     make \
     zlib-dev
 
-WORKDIR /tmp
+WORKDIR /opt
 
 # TODO ENABLE_DCTDECODER
 # TODO ENABLE_LIBOPENJPEG (use libjpeg-turbo?)
@@ -37,7 +38,15 @@ RUN \
         -DCMAKE_INSTALL_LIBDIR=lib \
         ../poppler && \
     make && \
-    make install && \
-    rm -rf *
+    make install
 
-# TODO provide webservice
+COPY server.go .
+
+# TODO minimize size
+RUN go build server.go
+
+# TODO use docker builder and copy result to scratch container
+
+EXPOSE 8080/tcp
+
+ENTRYPOINT ["./server"]
