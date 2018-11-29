@@ -1,6 +1,5 @@
 
-#FROM alpine:3.8
-FROM golang:alpine
+FROM golang:alpine as builder
 
 MAINTAINER Jojo le Barjos (jojolebarjos@gmail.com)
 
@@ -45,8 +44,22 @@ COPY server.go .
 # TODO minimize size
 RUN go build server.go
 
-# TODO use docker builder and copy result to scratch container
+RUN mkdir /tmp/root && \
+    mkdir /tmp/root/bin && \
+    mkdir /tmp/root/lib && \
+    ldd `which pdftotext` | awk '{ if ($2 == "=>") print $3; else print $1; }' | xargs -I '{}' cp '{}' /tmp/root/lib && \
+    cp /usr/local/bin/pdftotext /tmp/root/bin
+
+
+FROM scratch
+#FROM alpine:3.8
+
+MAINTAINER Jojo le Barjos (jojolebarjos@gmail.com)
+
+COPY --from=builder /tmp/root /
+
+# TODO run as non-root user
 
 EXPOSE 8080/tcp
 
-ENTRYPOINT ["./server"]
+#ENTRYPOINT ["./server"]
