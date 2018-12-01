@@ -39,16 +39,15 @@ RUN \
 COPY server.go .
 
 RUN \
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" server.go && \
+    go build -ldflags="-w -s" server.go && \
     upx -q --brute server
 
 RUN \
     mkdir /tmp/root && \
     mkdir /tmp/root/bin && \
     mkdir /tmp/root/lib && \
-    ldd `which pdftotext` | awk '{ if ($2 == "=>") print $3; else print $1; }' | xargs -I '{}' cp '{}' /tmp/root/lib && \
-    ldd server | awk '{ if ($2 == "=>") print $3; else print $1; }' | xargs -I '{}' cp '{}' /tmp/root/lib && \
-    cp /usr/local/bin/pdftotext server /tmp/root/bin
+    cp /usr/local/bin/pdftotext server /tmp/root/bin && \
+    { ldd /tmp/root/bin/pdftotext; ldd /tmp/root/bin/server; } | awk '{ if ($2 == "=>") print $3; else print $1; }' | xargs -I '{}' cp '{}' /tmp/root/lib
 
 RUN adduser -D -g '' user
 

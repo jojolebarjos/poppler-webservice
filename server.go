@@ -3,7 +3,6 @@ package main
 import (
     "bytes"
     "fmt"
-    "log"
     "net/http"
     "os/exec"
     "regexp"
@@ -31,6 +30,7 @@ var major, minor, revision = acquireVersion()
 func versionHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     fmt.Fprintf(w, `{"major":%d,"minor":%d,"revision":%d}`, major, minor, revision)
+    fmt.Printf("%s -> %s %s %s -> 200\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
 }
 
 // Extract PDF content
@@ -52,19 +52,23 @@ func extractHandler(w http.ResponseWriter, r *http.Request) {
     
     // Run
     err := cmd.Run()
+    var code int
     if err != nil {
-        w.WriteHeader(400)
+        code = 400
+        w.WriteHeader(code)
         w.Write(stderr.Bytes())
     } else {
         w.Write(stdout.Bytes())
     }
-    // TODO log query at some point
+    fmt.Printf("%s -> %s %s %s -> %d\n", r.RemoteAddr, r.Proto, r.Method, r.URL, code)
     
 }
 
 // Entry point
 func main() {
+    fmt.Printf("Using Poppler %d.%d.%d\n", major, minor, revision)
+    fmt.Printf("Listening on port 8080\n")
     http.HandleFunc("/version", versionHandler)
     http.HandleFunc("/extract", extractHandler)
-    log.Fatal(http.ListenAndServe(":8080", nil))
+    http.ListenAndServe(":8080", nil)
 }
