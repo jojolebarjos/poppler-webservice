@@ -3,7 +3,7 @@
 
 [Poppler](https://poppler.freedesktop.org/) is a PDF rendering library, which can be used to extract content into machine-readable format.
 
-This container provide a tiny webservice (~8Mo) with basic conversion capabilities.
+This container provide a tiny webservice (~13Mo) with basic conversion capabilities.
 
 
 ## Usage
@@ -27,7 +27,10 @@ HTTP GET /version
 HTTP POST /extract?format=xml
 file: <my.pdf>
 
-<plain text>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+...
 ```
 
 
@@ -35,8 +38,7 @@ file: <my.pdf>
 
  * Support HTTPS
  * Limit attachment size? (should take parameter from env var)
- * Build using ENABLE_DCTDECODER
- * Build using ENABLE_LIBOPENJPEG (with libjpeg-turbo?)
+ * Build using ENABLE_LIBOPENJPEG, should probably build [from source](https://github.com/uclouvain/openjpeg) since `opj_decompress` is required (and need to be properly copied to scratch)
  * Output more formats (e.g. HTML, maybe with images)
  * Maybe use UPX to reduce size
  * Use [C](https://blog.golang.org/c-go-cgo) directly?

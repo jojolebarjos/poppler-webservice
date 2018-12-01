@@ -2,36 +2,39 @@
 FROM golang:alpine as builder
 
 RUN apk --no-cache add \
+    cairo-dev \
     cmake \
     fontconfig-dev \
     freetype-dev \
     git \
     gcc \
     g++ \
+    lcms2-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
     make \
+    tiff-dev \
     zlib-dev
 
 WORKDIR /opt
 
 RUN \
-    git clone https://anongit.freedesktop.org/git/poppler/poppler.git && \
-    mkdir build && \
-    cd build && \
+    git clone --depth 1 https://anongit.freedesktop.org/git/poppler/poppler.git && \
+    cd poppler && \
     cmake \
         -DBUILD_CPP_TESTS=OFF \
         -DBUILD_GTK_TESTS=OFF \
         -DBUILD_QT5_TESTS=OFF \
         -DCMAKE_BUILD_TYPE=Release \
         -DENABLE_CPP=OFF \
-        -DENABLE_DCTDECODER=none \
+        -DENABLE_DCTDECODER=libjpeg \
         -DENABLE_GLIB=OFF \
         -DENABLE_GOBJECT_INTROSPECTION=OFF \
         -DENABLE_LIBCURL=OFF \
         -DENABLE_LIBOPENJPEG=none \
         -DENABLE_QT5=OFF \
         -DENABLE_SPLASH=OFF \
-        -DCMAKE_INSTALL_LIBDIR=lib \
-        ../poppler && \
+        -DCMAKE_INSTALL_LIBDIR=lib && \
     make && \
     make install
 
@@ -44,7 +47,9 @@ RUN \
     mkdir /tmp/root/bin && \
     mkdir /tmp/root/lib && \
     cp /usr/local/bin/pdftotext server /tmp/root/bin && \
-    { ldd /tmp/root/bin/pdftotext; ldd /tmp/root/bin/server; } | awk '{ if ($2 == "=>") print $3; else print $1; }' | xargs -I '{}' cp '{}' /tmp/root/lib
+    { ldd /tmp/root/bin/pdftotext; ldd /tmp/root/bin/server; } | awk '{ if ($2 == "=>") print $3; else print $1; }' > deps.txt && \
+    cat deps.txt && \
+    xargs -I '{}' cp '{}' /tmp/root/lib < deps.txt
 
 RUN adduser -D -g '' user
 
