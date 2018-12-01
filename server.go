@@ -36,9 +36,25 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 // Extract PDF content
 func extractHandler(w http.ResponseWriter, r *http.Request) {
     
+    // Get query parameters
+    format := r.URL.Query().Get("format")
+    if format == "" {
+        format = "xml"
+    }
+    
     // Prepare command
-    // TODO use query string to select appropriate output (plain text, html, xml...)
-    cmd := exec.Command("pdftotext", "-enc", "UTF-8", "-eol", "unix", "-layout", "-", "-")
+    var cmd *exec.Cmd
+    switch format {
+    // TODO HTML
+    case "txt":
+        cmd = exec.Command("pdftotext", "-enc", "UTF-8", "-eol", "unix", "-layout", "-", "-")
+    case "xml":
+        cmd = exec.Command("pdftotext", "-enc", "UTF-8", "-eol", "unix", "-bbox-layout", "-", "-")
+    default:
+        w.WriteHeader(400)
+        fmt.Fprintf(w, `Invalid format "%s"`, format)
+        return
+    }
     
     // Pipe attachment content to input
     file, _, _ := r.FormFile("file")
@@ -52,15 +68,16 @@ func extractHandler(w http.ResponseWriter, r *http.Request) {
     
     // Run
     err := cmd.Run()
-    var code int
     if err != nil {
-        code = 400
-        w.WriteHeader(code)
+        w.WriteHeader(400)
         w.Write(stderr.Bytes())
-    } else {
-        w.Write(stdout.Bytes())
+        fmt.Printf("%s -> %s %s %s -> 400\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
+        return
     }
-    fmt.Printf("%s -> %s %s %s -> %d\n", r.RemoteAddr, r.Proto, r.Method, r.URL, code)
+    
+    // Send payload
+    w.Write(stdout.Bytes())
+    fmt.Printf("%s -> %s %s %s -> 200\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
     
 }
 

@@ -9,7 +9,6 @@ RUN apk --no-cache add \
     gcc \
     g++ \
     make \
-    upx \
     zlib-dev
 
 WORKDIR /opt
@@ -38,9 +37,7 @@ RUN \
 
 COPY server.go .
 
-RUN \
-    go build -ldflags="-w -s" server.go && \
-    upx -q --brute server
+RUN go build -ldflags="-w -s" server.go
 
 RUN \
     mkdir /tmp/root && \

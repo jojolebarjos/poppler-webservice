@@ -24,7 +24,7 @@ HTTP GET /version
 ```
 
 ```
-HTTP POST /extract
+HTTP POST /extract?format=xml
 file: <my.pdf>
 
 <plain text>
@@ -33,9 +33,11 @@ file: <my.pdf>
 
 ## ToDo list
 
-  * Use [C](https://blog.golang.org/c-go-cgo) directly?
-  * Better error handling
-  * Limit attachment size? (should take parameter from env var)
-  * Build using ENABLE_DCTDECODER
-  * Build using ENABLE_LIBOPENJPEG (with libjpeg-turbo?)
-  * Provide output format choice in query string (e.g. xml, xml, txt)
+ * Support HTTPS
+ * Limit attachment size? (should take parameter from env var)
+ * Build using ENABLE_DCTDECODER
+ * Build using ENABLE_LIBOPENJPEG (with libjpeg-turbo?)
+ * Output more formats (e.g. HTML, maybe with images)
+ * Maybe use UPX to reduce size
+ * Use [C](https://blog.golang.org/c-go-cgo) directly?
+ * Better error handling
