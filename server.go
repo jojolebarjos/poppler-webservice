@@ -50,6 +50,7 @@ func extractHandler(w http.ResponseWriter, r *http.Request) {
         cmd = exec.Command("pdftotext", "-enc", "UTF-8", "-eol", "unix", "-layout", "-", "-")
     case "xml":
         cmd = exec.Command("pdftotext", "-enc", "UTF-8", "-eol", "unix", "-bbox-layout", "-", "-")
+        w.Header().Set("Content-Type", "application/xhtml+xml")
     default:
         w.WriteHeader(400)
         fmt.Fprintf(w, `Invalid format "%s"`, format)
