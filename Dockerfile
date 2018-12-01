@@ -50,12 +50,18 @@ RUN \
     ldd server | awk '{ if ($2 == "=>") print $3; else print $1; }' | xargs -I '{}' cp '{}' /tmp/root/lib && \
     cp /usr/local/bin/pdftotext server /tmp/root/bin
 
+RUN adduser -D -g '' user
+
 FROM scratch
 
 MAINTAINER Jojo le Barjos (jojolebarjos@gmail.com)
 
 COPY --from=builder /tmp/root /
 
+COPY --from=builder /etc/passwd /etc/passwd
+
 EXPOSE 8080/tcp
+
+USER user
 
 ENTRYPOINT ["/bin/server"]
