@@ -36,7 +36,7 @@ file: <my.pdf>
   * Use [C](https://blog.golang.org/c-go-cgo) directly?
   * Better error handling
   * Do not run as root
-  * Optimize build size
   * Limit attachment size? (should take parameter from env var)
   * Build using ENABLE_DCTDECODER
   * Build using ENABLE_LIBOPENJPEG (with libjpeg-turbo?)
+  * Provide output format choice in query string (e.g. xml, xml, txt)
