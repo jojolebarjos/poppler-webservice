@@ -3,6 +3,8 @@
 
 [Poppler](https://poppler.freedesktop.org/) is a PDF rendering library, which can be used to extract content into machine-readable format.
 
+This container provide a tiny webservice (~8Mo) with basic conversion capabilities.
+
 
 ## Usage
 

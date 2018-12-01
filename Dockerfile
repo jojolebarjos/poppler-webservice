@@ -9,6 +9,7 @@ RUN apk --no-cache add \
     gcc \
     g++ \
     make \
+    upx \
     zlib-dev
 
 WORKDIR /opt
@@ -37,7 +38,9 @@ RUN \
 
 COPY server.go .
 
-RUN go build server.go
+RUN \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" server.go && \
+    upx -q --brute server
 
 RUN \
     mkdir /tmp/root && \
