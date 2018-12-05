@@ -56,9 +56,11 @@ RUN \
 
 RUN adduser -D -g '' user
 
-FROM scratch
+FROM alpine:3.8
 
 MAINTAINER Jojo le Barjos (jojolebarjos@gmail.com)
+
+RUN apk add --no-cache fontconfig
 
 COPY --from=builder /tmp/root /
 

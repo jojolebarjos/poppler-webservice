@@ -3,7 +3,10 @@ package main
 import (
     "bytes"
     "fmt"
+    "io"
+    "io/ioutil"
     "net/http"
+    "os"
     "os/exec"
     "regexp"
     "strconv"
@@ -32,6 +35,8 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, `{"major":%d,"minor":%d,"revision":%d}`, major, minor, revision)
     fmt.Printf("%s -> %s %s %s -> 200\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
 }
+
+// TODO refactor everything
 
 // Extract as text document
 func extractText(w http.ResponseWriter, r *http.Request, format string) {
@@ -77,9 +82,61 @@ func extractText(w http.ResponseWriter, r *http.Request, format string) {
 
 // Extract as image collection
 func extractImage(w http.ResponseWriter, r *http.Request, format string) {
-    w.WriteHeader(400)
-    fmt.Fprintf(w, `"%s" not yet implemented`, format)
-    fmt.Printf("%s -> %s %s %s -> 400\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
+    
+    // Create temporary folder
+    tmpFolder, _ := ioutil.TempDir("", "")
+    defer os.RemoveAll(tmpFolder)
+    
+    // Get attachment
+    attachmentFile, _, attachmentError := r.FormFile("file")
+    if attachmentError != nil {
+        w.WriteHeader(400)
+        fmt.Fprintf(w, `No "file" attachment`)
+        fmt.Printf("%s -> %s %s %s -> 400\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
+        return
+    }
+    defer attachmentFile.Close()
+    
+    // Store attachment
+    inputPath := tmpFolder + "/input.pdf"
+    inputFile, _ := os.Create(inputPath)
+    defer inputFile.Close()
+    io.Copy(inputFile, attachmentFile)
+    inputFile.Sync()
+    
+    // Create output folder
+    outputFolder := tmpFolder + "/output"
+    os.Mkdir(outputFolder, 0700)
+    
+    // Prepare command
+    outputPrefix := outputFolder + "/page"
+    // TODO -jpegopt <string>        : jpeg options, with format <opt1>=<val1>[,<optN>=<valN>]*
+    // TODO -r <fp>                  : resolution, in PPI (default is 150)
+    // TODO -antialias <string>      : set cairo antialias option
+    cmd := exec.Command("pdftocairo", "-jpeg", inputPath, outputPrefix)
+    
+    // Run command
+    cmdOutput, cmdError := cmd.CombinedOutput()
+    if cmdError != nil {
+        w.WriteHeader(400)
+        w.Write(cmdOutput)
+        fmt.Println(cmdError)
+        fmt.Printf("%s -> %s %s %s -> 400\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
+        return
+    }
+    
+    // Collect results into a single archive
+    tarPath := tmpFolder + "/output.tar.gz"
+    tarCmd := exec.Command("tar", "-C", tmpFolder, "-zcvf", tarPath, "output")
+    tarCmd.Run()
+    
+    // Send result
+    tarFile, _ := os.Open(tarPath)
+    defer tarFile.Close()
+    w.Header().Set("Content-Type", "application/gzip")
+    io.Copy(w, tarFile)
+    fmt.Printf("%s -> %s %s %s -> 200\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
+
 }
 
 // Extract PDF content
