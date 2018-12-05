@@ -13,6 +13,8 @@ RUN apk --no-cache add \
     libjpeg-turbo-dev \
     libpng-dev \
     make \
+    openjpeg-dev \
+    openjpeg-tools \
     tiff-dev \
     zlib-dev
 
@@ -21,6 +23,7 @@ WORKDIR /opt
 RUN \
     git clone --depth 1 https://anongit.freedesktop.org/git/poppler/poppler.git && \
     cd poppler && \
+    ln -s /usr/include/openjpeg-*/* /usr/include/ && \
     cmake \
         -DBUILD_CPP_TESTS=OFF \
         -DBUILD_GTK_TESTS=OFF \
@@ -31,7 +34,7 @@ RUN \
         -DENABLE_GLIB=OFF \
         -DENABLE_GOBJECT_INTROSPECTION=OFF \
         -DENABLE_LIBCURL=OFF \
-        -DENABLE_LIBOPENJPEG=none \
+        -DENABLE_LIBOPENJPEG=openjpeg2 \
         -DENABLE_QT5=OFF \
         -DENABLE_SPLASH=OFF \
         -DCMAKE_INSTALL_LIBDIR=lib && \
@@ -46,8 +49,8 @@ RUN \
     mkdir /tmp/root && \
     mkdir /tmp/root/bin && \
     mkdir /tmp/root/lib && \
-    cp /usr/local/bin/pdftotext server /tmp/root/bin && \
-    { ldd /tmp/root/bin/pdftotext; ldd /tmp/root/bin/server; } | awk '{ if ($2 == "=>") print $3; else print $1; }' > deps.txt && \
+    cp /usr/local/bin/pdftotext /usr/local/bin/pdftocairo server /tmp/root/bin && \
+    { ldd /tmp/root/bin/pdftotext; ldd /tmp/root/bin/pdftocairo; ldd /tmp/root/bin/server; } | awk '{ if ($2 == "=>") print $3; else print $1; }' > deps.txt && \
     cat deps.txt && \
     xargs -I '{}' cp '{}' /tmp/root/lib < deps.txt
 
