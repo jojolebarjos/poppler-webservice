@@ -33,14 +33,8 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Printf("%s -> %s %s %s -> 200\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
 }
 
-// Extract PDF content
-func extractHandler(w http.ResponseWriter, r *http.Request) {
-    
-    // Get query parameters
-    format := r.URL.Query().Get("format")
-    if format == "" {
-        format = "xml"
-    }
+// Extract as text document
+func extractText(w http.ResponseWriter, r *http.Request, format string) {
     
     // Prepare command
     var cmd *exec.Cmd
@@ -79,6 +73,36 @@ func extractHandler(w http.ResponseWriter, r *http.Request) {
     // Send payload
     w.Write(stdout.Bytes())
     fmt.Printf("%s -> %s %s %s -> 200\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
+}
+
+// Extract as image collection
+func extractImage(w http.ResponseWriter, r *http.Request, format string) {
+    w.WriteHeader(400)
+    fmt.Fprintf(w, `"%s" not yet implemented`, format)
+    fmt.Printf("%s -> %s %s %s -> 400\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
+}
+
+// Extract PDF content
+func extractHandler(w http.ResponseWriter, r *http.Request) {
+    
+    // TODO Top-level try catch
+    
+    // Select appropriate handler
+    format := r.URL.Query().Get("format")
+    switch format {
+    case "txt":
+        extractText(w, r, "txt")
+    case "xml", "":
+        extractText(w, r, "xml")
+    case "jpg":
+        extractImage(w, r, "jpg")
+    case "png":
+        extractImage(w, r, "png")
+    default:
+        w.WriteHeader(400)
+        fmt.Fprintf(w, `Invalid format "%s"`, format)
+        fmt.Printf("%s -> %s %s %s -> 400\n", r.RemoteAddr, r.Proto, r.Method, r.URL)
+    }
     
 }
 
